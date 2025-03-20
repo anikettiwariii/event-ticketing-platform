@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= event.name || "Unknown Event" %></title>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const addToCartBtn = document.getElementById("addToCartBtn");
+            const viewCartBtn = document.getElementById("viewCartBtn");
+            const checkoutBtn = document.getElementById("checkoutBtn"); // ✅ Added Checkout Button
+
+            if (!addToCartBtn) {
+                console.error("❌ Add to Cart button not found!");
+                return;
+            }
+
+            console.log("✅ Add to Cart button found!");
+
+            // ✅ Retrieve token from session (passed by server)
+            const token = "<%= token %>";
+            console.log("🔍 Retrieved Token in frontend:", token);
+
+            // ✅ Add to Cart Functionality
+            addToCartBtn.addEventListener("click", async () => {
+                console.log("🛒 Add to Cart button clicked!");
+
+                if (!token || token === "undefined") {
+                    alert("Please log in to add items to the cart.");
+                    return;
+                }
+
+                const eventId = "<%= event.id %>";
+                const name = "<%= event.name %>";
+                const price = "<%= eventPrice %>";
+
+                console.log("🚀 Preparing to send add-to-cart request with:", { eventId, name, price, token });
+
+                try {
+                    const response = await fetch("http://localhost:5004/api/cart/add", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ eventId, name, price })
+                    });
+
+                    console.log("🔄 Response received from server:", response);
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        console.log("✅ Item successfully added to cart!");
+                        alert("✅ Added to cart!");
+                    } else {
+                        throw new Error(data.error || "Failed to add to cart.");
+                    }
+                } catch (error) {
+                    console.error("❌ Error sending add-to-cart request:", error.message);
+                    alert("❌ Failed to add to cart: " + error.message);
+                }
+            });
+
+            // ✅ View Cart Button Logic
+            if (viewCartBtn) {
+                viewCartBtn.addEventListener("click", () => {
+                    console.log("📦 Redirecting to cart page...");
+                    window.location.href = "/cart";  // 🔗 Redirect to cart page
+                });
+            }
+
+            // ✅ Checkout Button Logic
+            if (checkoutBtn) {
+                checkoutBtn.addEventListener("click", async () => {
+                    console.log("✅ Checkout button clicked!");
+                    
+                    try {
+                        const response = await fetch("http://localhost:5004/api/checkout", {
+                            method: "POST",
+                            headers: {
+                                "Authorization": `Bearer ${token}`
+                            }
+                        });
+
+                        const data = await response.json();
+                        if (response.ok) {
+                            alert("✅ Checkout successful! Order placed.");
+                            window.location.href = "/events"; // 🔗 Redirect to events after checkout
+                        } else {
+                            throw new Error(data.error || "Checkout failed.");
+                        }
+                    } catch (error) {
+                        console.error("❌ Checkout error:", error.message);
+                        alert("❌ Checkout failed: " + error.message);
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1><%= event.name || "Unknown Event" %></h1>
+
+    <p><strong>Date:</strong> <%= event.dates && event.dates.start ? event.dates.start.localDate : "N/A" %></p>
+    <p><strong>Time:</strong> <%= event.dates && event.dates.start ? event.dates.start.localTime : "N/A" %></p>
+
+    <p><strong>Price:</strong> $<%= eventPrice %></p> 
+
+    <h2>🎟️ <strong>Venue Information</strong></h2>
+    <p><strong>Venue:</strong> 
+        <%= event._embedded && event._embedded.venues && event._embedded.venues.length > 0 
+            ? event._embedded.venues[0].name 
+            : "Unknown" 
+        %>
+    </p>
+    <p><strong>Location:</strong> 
+        <%= event._embedded && event._embedded.venues && event._embedded.venues.length > 0 
+            ? event._embedded.venues[0].city.name + ', ' + event._embedded.venues[0].country.name 
+            : "Unknown" 
+        %>
+    </p>
+
+    <% if (event.images && event.images.length > 0) { %>
+        <img src="<%= event.images[0].url %>" alt="Event Image" width="300">
+    <% } else { %>
+        <p>No Image Available</p>
+    <% } %>
+
+    <button id="addToCartBtn">🛒 Add to Cart</button>
+    <button id="viewCartBtn">🛒 View Cart</button> <!-- ✅ View Cart Button -->
+     <!-- button id="checkoutBtn">✅ Proceed to Checkout</button>✅ Checkout Button -->
+    
+    <br><br>
+    <a href="/events">⬅️ Back to Events</a>
+</body>
+</html>

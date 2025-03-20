@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Events</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <h1>🎟️ Available Events</h1>
+
+    <!-- 🔎 Search Bar -->
+    <input type="text" id="searchBar" placeholder="Search events..." onkeyup="filterEvents()">
+
+    <!-- 🎵 Concerts Section -->
+    <h2>🎵 Concerts</h2>
+    <% if (concerts && concerts.length > 0) { %>
+        <ul id="concertsList">
+            <% concerts.forEach(event => { %>
+                <li>
+                    <a href="/events/<%= event.id %>"><%= event.name %></a>                 
+                </li>
+            <% }); %>
+        </ul>
+    <% } else { %>
+        <p>No concerts available.</p>
+    <% } %>
+
+    <!-- 🏀 Sports Section -->
+    <h2>🏀 Sports</h2>
+    <% if (sports && sports.length > 0) { %>
+        <ul id="sportsList">
+            <% sports.forEach(event => { %>
+                <li>
+                    <a href="/events/<%= event.id %>"><%= event.name %></a> 
+                </li>
+            <% }); %>
+        </ul>
+    <% } else { %>
+        <p>No sports events available.</p>
+    <% } %>
+
+    <script>
+        function filterEvents() {
+            let input = document.getElementById("searchBar").value.toLowerCase();
+            let concerts = document.getElementById("concertsList").getElementsByTagName("li");
+            let sports = document.getElementById("sportsList").getElementsByTagName("li");
+
+            filterList(concerts, input);
+            filterList(sports, input);
+        }
+
+        function filterList(list, input) {
+            for (let i = 0; i < list.length; i++) {
+                let text = list[i].innerText.toLowerCase();
+                list[i].style.display = text.includes(input) ? "" : "none";
+            }
+        }
+    </script>
+</body>
+</html>

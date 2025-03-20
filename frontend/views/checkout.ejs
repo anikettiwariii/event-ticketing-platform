@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const checkoutBtn = document.getElementById("checkoutBtn");
+
+            if (!checkoutBtn) {
+                console.error("❌ Checkout button not found!");
+                return;
+            }
+
+            console.log("✅ Checkout button found!");
+
+            // ✅ Retrieve token from session (passed by server)
+            const token = "<%= token %>";
+            console.log("🔍 Retrieved Token in frontend:", token);
+
+            checkoutBtn.addEventListener("click", async () => {
+                console.log("🛍️ Checkout button clicked!");
+
+                if (!token || token === "undefined") {
+                    alert("Please log in to proceed with checkout.");
+                    return;
+                }
+
+                try {
+                    const response = await fetch("/checkout/process", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        console.log("✅ Order placed successfully!", data);
+                        alert("🎉 Order placed successfully!");
+                        window.location.href = "/orders"; // Redirect to order history page
+                    } else {
+                        throw new Error(data.error || "Failed to process checkout.");
+                    }
+                } catch (error) {
+                    console.error("❌ Error processing checkout:", error.message);
+                    alert("❌ Checkout failed: " + error.message);
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>🛒 Checkout</h1>
+
+    <% if (cart.items && cart.items.length > 0) { %>
+        <ul>
+            <% cart.items.forEach(item => { %>
+                <li>
+                    <strong><%= item.name %></strong> - 
+                    $<%= item.price %> x <%= item.quantity %>
+                </li>
+            <% }); %>
+        </ul>
+        <p><strong>Total Amount:</strong> $<%= total %></p>
+
+        <button id="checkoutBtn">🛍️ Confirm Checkout</button>
+    <% } else { %>
+        <p>🛑 Your cart is empty. <a href="/events">Browse Events</a></p>
+    <% } %>
+
+    <br><br>
+    <a href="/cart">⬅️ Back to Cart</a>
+</body>
+</html>

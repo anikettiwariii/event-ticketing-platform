@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart</title>
+</head>
+<body>
+    <h1>🛒 Your Cart</h1>
+
+    <% if (cart.items.length === 0) { %>
+        <p>Your cart is empty! 😢</p>
+    <% } else { %>
+        <ul>
+            <% cart.items.forEach(item => { %>
+                <li>
+                    <strong><%= item.name %></strong> - $<%= item.price %> x <%= item.quantity || 1 %>
+                </li>
+            <% }); %>
+        </ul>
+
+        <p><strong>Total: </strong> $<%= cart.items.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0) %></p>
+
+        <form action="/checkout" method="GET">
+            <button type="submit">✅ Proceed to Checkout</button>
+        </form>
+    <% } %>
+
+    <br>
+    <a href="/events">⬅️ Continue Shopping</a>
+</body>
+</html>
