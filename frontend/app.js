@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const session = require('express-session');
+require('dotenv').config();
 
 const app = express(); // ✅ Initialize `app` first
 
@@ -27,9 +28,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Import and use routes
 const eventRoutes = require('./routes/eventRoutes');
 const cartRoutes = require('./routes/cartRoutes');
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 
+app.use('/auth', authRoutes);
 app.use('/cart', cartRoutes);
 app.use('/', eventRoutes);
+app.use('/users', userRoutes);
 app.use("/checkout", require("./routes/checkoutRoutes"));
-
+require("dotenv").config();
 app.listen(3000, () => console.log('🌍 Frontend running on http://localhost:3000'));

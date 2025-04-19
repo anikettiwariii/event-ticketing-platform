@@ -8,7 +8,12 @@
 </head>
 <body>
     <h1>🎟️ Available Events</h1>
-
+    <div style="margin-bottom: 1em;">
+        <form action="/users/logout" method="GET">
+            <button type="submit">🚪 Logout</button>
+        </form>
+    </div>
+    
     <!-- 🔎 Search Bar -->
     <input type="text" id="searchBar" placeholder="Search events..." onkeyup="filterEvents()">
 

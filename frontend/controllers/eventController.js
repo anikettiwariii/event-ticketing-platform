@@ -1,4 +1,5 @@
 const axios = require('axios');
+const getAccessToken = require("../utils/getAccessToken");
 
 exports.checkJWTAuth = (req, res, next) => {
     const token = req.session.token;
@@ -12,69 +13,59 @@ exports.checkJWTAuth = (req, res, next) => {
 };
 
 exports.showEvents = async (req, res) => {
-    // ✅ Retrieve token from session
-    const token = req.session.token;
-
-    // ✅ If no token, redirect to login
-    if (!token) {
-        console.log("❌ No token found in session. Redirecting to login.");
-        return res.redirect("/");
-    }
-
     try {
-        console.log("🔍 Fetching events...");
-        const response = await axios.get("http://localhost:5001/api/events/all", {
-            headers: { Authorization: `Bearer ${token}` },
+        // 🔐 Get tokens for concert and sports services
+        const concertToken = await getAccessToken("concert-service");
+        const sportsToken = await getAccessToken("sports-service");
+
+        // 🎶 Fetch concerts
+        const concertResponse = await axios.get("http://localhost:5002/api/concerts", {
+            headers: { Authorization: `Bearer ${concertToken}` },
         });
 
-        console.log("✅ Events received:", response.data);
+        // 🏀 Fetch sports
+        const sportsResponse = await axios.get("http://localhost:5003/api/sports", {
+            headers: { Authorization: `Bearer ${sportsToken}` },
+        });
 
-        res.render("events", { 
-            concerts: response.data.concerts || [], 
-            sports: response.data.sports || [] 
+        res.render("events", {
+            concerts: concertResponse.data || [],
+            sports: sportsResponse.data || [],
         });
 
     } catch (error) {
-        // ✅ Handle Unauthorized Token (401)
-        if (error.response && error.response.status === 401) {
-            console.log("❌ Token expired or invalid. Logging out user.");
-            req.session.destroy(); // Destroy session to force re-login
-            return res.redirect("/");
-        }
-
         console.error("❌ Error fetching events:", error.message);
-        res.render("events", { concerts: [], sports: [] }); // Send empty array to prevent crash
+        res.render("events", { concerts: [], sports: [] });
     }
 };
 
 
-// 🔹 Fetch and display a single event's details
 exports.showEventDetails = async (req, res) => {
+    const eventId = req.params.id;
+    if (!eventId) {
+        console.error("❌ Missing event ID in request.");
+        return res.status(400).send("Bad Request: Missing event ID");
+    }
+
     try {
-        const eventId = req.params.id;
-        const token = req.session.token;
+        // 🧠 Decide which service to use based on eventId pattern
+        const isConcert = eventId.startsWith("Z") || eventId.includes("loom"); // basic heuristic
+        const service = isConcert ? "concert-service" : "sports-service";
+        const port = isConcert ? 5002 : 5003;
 
-        if (!eventId) {
-            console.error("❌ Missing event ID in request.");
-            return res.status(400).send("Bad Request: Missing event ID");
-        }
+        const token = await getAccessToken(service);
 
-        console.log(`🔍 Fetching event details for ID: ${eventId}`);
-
-        const response = await axios.get(`http://localhost:5001/api/events/${eventId}`, {
+        const response = await axios.get(`http://localhost:${port}/api/${isConcert ? "concerts" : "sports"}/${eventId}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
 
         const event = response.data;
-        console.log("✅ Event details fetched successfully:", event);
-
-        // ✅ Precompute event price: If available, use it; otherwise, set to 100
         const eventPrice =
             event.priceRanges && event.priceRanges.length > 0
                 ? event.priceRanges[0].min
                 : 100;
 
-        res.render("eventDetails", { event, eventPrice, token });
+        res.render("eventDetails", { event, eventPrice, token: req.session.token });
     } catch (error) {
         console.error("❌ Error fetching event details:", error.message);
         res.status(500).send("Internal Server Error: Could not fetch event details.");
@@ -82,6 +73,7 @@ exports.showEventDetails = async (req, res) => {
 };
 
 
+/*
 // 🔹 Signup User
 exports.signup = async (req, res) => {
     try {
@@ -119,7 +111,7 @@ exports.login = async (req, res) => {
     }
 };
 
-
+*/
 
 // 🔹 Logout User
 exports.logout = async (req, res) => {

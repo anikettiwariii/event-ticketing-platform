@@ -10,7 +10,7 @@ app.use(cors());
 
 // Import routes
 const sportsRoutes = require('./routes/sportsRoutes');
-app.use('/api/sports', sportsRoutes);
+app.use("/api", sportsRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 5003;

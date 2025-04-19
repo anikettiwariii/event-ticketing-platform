@@ -1,10 +1,15 @@
 <%- include('layout') %>
+
 <h2>Register</h2>
-<form method="POST">
+
+<form method="POST" action="/auth/signup">
     <input type="text" name="username" placeholder="Username" required />
     <input type="password" name="password" placeholder="Password" required />
     <button type="submit">Register</button>
-    <% if (message) { %>
-        <p><%= message %></p>
-    <% } %>
 </form>
+
+<% if (message) { %>
+    <p style="color: red;"><%= message %></p>
+<% } %>
+
+<p>Already have an account? <a href="/auth/login">Login here</a></p>
